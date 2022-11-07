@@ -1,0 +1,31 @@
+#!/bin/bash
+
+echo -e "\n*********************************************************"
+echo -e "*      PROFTPD & LDAP MADE EASY           *       "
+echo -e "*********************************************************\n"
+echo -e "We need some settings for server customization:\n"
+read -p "Enter LDAP Server ip: " LDAP_SERVER
+read -p "Enter LDAP DOMAIN: (domain.example.com): " LDAP_NAME
+read -p "Enter ldap admin password: " ADMIN_PW
+echo -e "\nplease wait...\n"
+
+# Installing proftpd and proftpd
+apt-get -y update &>/dev/null
+apt-get -y proftpd proftpd-mod-ldap &>/dev/null
+
+IFS=. read ONE TWO THREE <<<"${LDAP_NAME}"
+BIND_DN=dc=$ONE,dc=$TWO,dc=$THREE
+
+# Get config files from pastebin
+wget -O ldap.conf https://pastebin.com/raw/1nrDUpzb
+wget -O modules.conf https://pastebin.com/raw/xJG5fGvA
+wget -O proftpd.conf https://pastebin.com/raw/82SjBC1h
+
+# Modfify ldap.conf with console settings
+sed -i -e "s/LDAPServer/LDAPServer $LDAP_SERVER/" ldap.conf
+sed -i -e "s/LDAPBindDN/LDAPBindDN \"cn=admin,$BIND_DN\" \"$ADMIN_PW\"/" ldap.conf
+sed -i -e "s/LDAPUsers/LDAPUsers $BIND_DN (uid=%u) (uidNumber=%u)/" ldap.conf
+
+# Remove old proftpd config files and move in the new ones
+rm -rf /etc/proftpd/ldap.conf /etc/proftpd/modules.conf /etc/proftpd/proftpd.conf
+cp ldap.conf proftpd.conf modules.conf /etc/proftpd/
