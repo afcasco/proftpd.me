@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Make sure we start from scratch removing everyting related to proftpd
+apt-get purge -y proftpd-core proftpd-basic proftpd proftpd-mod-ldap
+apt-get autoremove -y
+rm -rf /etc/proftpd
+apt-get update -y
